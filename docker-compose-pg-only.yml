@@ -10,7 +10,7 @@ services:
       - APP_DB_PASS=test_pass
       - APP_DB_NAME=test
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - db:/var/lib/postgresql/data
       - ./test-db-init:/docker-entrypoint-initdb.d/
