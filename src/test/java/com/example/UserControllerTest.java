@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("integration-test")
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
 @WithMockUser(username = "user")
 class UserControllerTest {
 
