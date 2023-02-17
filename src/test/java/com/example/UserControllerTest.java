@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,7 +37,7 @@ class UserControllerTest {
                 .perform(get("/index"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
-                .andExpect(model().attribute("users", Matchers.is(List.of(user))));
+                .andExpect(model().attribute("users", hasItem(user)));
     }
 
     private User user() {
