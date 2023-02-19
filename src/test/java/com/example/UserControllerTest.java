@@ -64,6 +64,18 @@ class UserControllerTest {
                 .isPresent();
     }
 
+    @Test
+    void returnsUpdateUserPageWithUserFoundById() throws Exception {
+
+        User user = userRepository.save(user());
+
+        this.mockMvc
+                .perform(get("/edit/{id}", user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("update-user"))
+                .andExpect(model().attribute("user", is(user)));
+    }
+
     private User user() {
         User user = new User();
         user.setEmail(email());
