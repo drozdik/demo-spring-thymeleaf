@@ -57,7 +57,7 @@ class UserControllerTest {
                         .param("name", newUser.getName())
                         .param("email", newUser.getEmail()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/index"));
+                .andExpect(redirectedUrl("/index"));
 
         assertThat(
                 userRepository.findByNameAndEmail(newUser.getName(), newUser.getEmail()))
@@ -74,6 +74,30 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("update-user"))
                 .andExpect(model().attribute("user", is(user)));
+    }
+
+    @Test
+    void updatesUserAndRedirectsToIndexPage() throws Exception {
+        User newUser = user();
+        newUser.setEmail(uniqueEmail());
+        newUser.setName("Bob");
+
+        this.mockMvc
+                .perform(post("/update/{id}", newUser.getId())
+                        .with(csrf())
+                        .param("name", "Alice")
+                        .param("email", newUser.getEmail()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/index"));
+
+        assertThat(
+                userRepository.findByEmail(newUser.getEmail()).orElseThrow().getName())
+                .as("new name")
+                .isEqualTo("Alice");
+    }
+
+    private String uniqueEmail() {
+        return "%s@email.com".formatted(UUID.randomUUID());
     }
 
     private User user() {
