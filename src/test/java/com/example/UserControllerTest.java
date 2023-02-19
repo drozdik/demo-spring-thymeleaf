@@ -96,6 +96,21 @@ class UserControllerTest {
                 .isEqualTo("Alice");
     }
 
+    @Test
+    void deletesUserAndRedirectsToIndexPage() throws Exception {
+        User user = user();
+        user.setEmail(uniqueEmail());
+        user = userRepository.save(user);
+
+        this.mockMvc
+                .perform(get("/delete/{id}", user.getId()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/index"));
+
+        assertThat(
+                userRepository.findByEmail(user.getEmail())).isEmpty();
+    }
+
     private String uniqueEmail() {
         return "%s@email.com".formatted(UUID.randomUUID());
     }
