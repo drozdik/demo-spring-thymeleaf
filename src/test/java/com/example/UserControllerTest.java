@@ -1,23 +1,19 @@
 package com.example;
 
-import org.assertj.core.api.Assertions;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,21 +52,15 @@ class UserControllerTest {
     }
 
     @Test
-    void savesNewUserAndRedirectsToIndexPage() throws Exception {
-        User newUser = user();
-        newUser.setName(UUID.randomUUID().toString());
-
+    void savingInvalidUserReturnsAddUserPage() throws Exception {
+        String blank = "  ";
         this.mockMvc
                 .perform(post("/adduser")
                         .with(csrf())
-                        .param("name", newUser.getName())
-                        .param("email", newUser.getEmail()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/index"));
-
-        assertThat(
-                userRepository.findByNameAndEmail(newUser.getName(), newUser.getEmail()))
-                .isPresent();
+                        .param("name", "Bob")
+                        .param("email", blank))
+                .andExpect(status().isOk())
+                .andExpect(view().name("add-user"));
     }
 
     @Test
@@ -108,6 +98,7 @@ class UserControllerTest {
         User newUser = user();
         newUser.setEmail(uniqueEmail());
         newUser.setName("Bob");
+        userRepository.save(newUser);
 
         this.mockMvc
                 .perform(post("/update/{id}", newUser.getId())
@@ -124,6 +115,23 @@ class UserControllerTest {
     }
 
     @Test
+    void updatingUserWithInvalidEmailReturnsUpdateUserPage() throws Exception {
+        User user = user();
+        user.setEmail(uniqueEmail());
+        user.setName("Bob");
+        userRepository.save(user);
+        String blank = "  ";
+
+        this.mockMvc
+                .perform(post("/update/{id}", user.getId())
+                        .with(csrf())
+                        .param("name", "Alice")
+                        .param("email", blank))
+                .andExpect(status().isOk())
+                .andExpect(view().name("update-user"));
+    }
+
+    @Test
     void deletesUserAndRedirectsToIndexPage() throws Exception {
         User user = user();
         user.setEmail(uniqueEmail());
@@ -136,6 +144,20 @@ class UserControllerTest {
 
         assertThat(
                 userRepository.findByEmail(user.getEmail())).isEmpty();
+    }
+
+    @Test
+    void deletesByNotExistingIdWillThrow() {
+        assertThatThrownBy(() -> this.mockMvc
+                .perform(get("/delete/{id}", Long.MAX_VALUE))
+                .andExpect(status().is4xxClientError())).hasCauseInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getUpdateFormWithNonExistingUserIdWillThrow() {
+        assertThatThrownBy(() -> this.mockMvc
+                .perform(get("/edit/{id}", Long.MAX_VALUE))
+                .andExpect(status().is4xxClientError())).hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private String uniqueEmail() {
