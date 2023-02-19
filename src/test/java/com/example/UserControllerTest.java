@@ -36,6 +36,15 @@ class UserControllerTest {
     UserRepository userRepository;
 
     @Test
+    void signupReturnsAddUserPage() throws Exception {
+
+        this.mockMvc
+                .perform(get("/signup"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("add-user"));
+    }
+
+    @Test
     void indexPageHasExistingUsers() throws Exception {
         User user = userRepository.save(user());
 
@@ -44,6 +53,24 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
                 .andExpect(model().attribute("users", hasItem(user)));
+    }
+
+    @Test
+    void savesNewUserAndRedirectsToIndexPage() throws Exception {
+        User newUser = user();
+        newUser.setName(UUID.randomUUID().toString());
+
+        this.mockMvc
+                .perform(post("/adduser")
+                        .with(csrf())
+                        .param("name", newUser.getName())
+                        .param("email", newUser.getEmail()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/index"));
+
+        assertThat(
+                userRepository.findByNameAndEmail(newUser.getName(), newUser.getEmail()))
+                .isPresent();
     }
 
     @Test
