@@ -2,7 +2,6 @@
 * database schema migration
 * logs
 * test containers?
-* need to fix problem when database already has something
- 
+* let's add something simple like 'phone number' to user
 
 * end goal try working stack which i can use to build first app, let's go with Chores
