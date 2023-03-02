@@ -98,20 +98,22 @@ class UserControllerTest {
         User newUser = user();
         newUser.setEmail(uniqueEmail());
         newUser.setName("Bob");
+        newUser.setPhone("111");
         userRepository.save(newUser);
 
         this.mockMvc
                 .perform(post("/update/{id}", newUser.getId())
                         .with(csrf())
                         .param("name", "Alice")
-                        .param("email", newUser.getEmail()))
+                        .param("email", newUser.getEmail())
+                        .param("phone", "222")
+                )
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/index"));
 
-        assertThat(
-                userRepository.findByEmail(newUser.getEmail()).orElseThrow().getName())
-                .as("new name")
-                .isEqualTo("Alice");
+        User storedUser = userRepository.findByEmail(newUser.getEmail()).orElseThrow();
+        assertThat(storedUser.getName()).as("new name").isEqualTo("Alice");
+        assertThat(storedUser.getPhone()).as("new phone").isEqualTo("222");
     }
 
     @Test
@@ -168,7 +170,12 @@ class UserControllerTest {
         User user = new User();
         user.setEmail(email());
         user.setName(name());
+        user.setPhone(phone());
         return user;
+    }
+
+    private String phone() {
+        return "123123";
     }
 
     private String name() {
